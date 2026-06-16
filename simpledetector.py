@@ -1,9 +1,17 @@
 import cv2
 import numpy as np
+import matplotlib.pyplot as plt
 
 image = cv2.imread("test image.jpg")
 gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-_, thresh = cv2.threshold(gray, 80, 255, cv2.THRESH_BINARY)
+normalized = cv2.normalize(gray, None, 0, 255, cv2.NORM_MINMAX)
+fig, axes = plt.subplots(1, 2, figsize=(10, 5))
+axes[0].imshow(gray, cmap='gray')
+axes[0].set_title("Original Grayscale")
+axes[1].imshow(normalized, cmap='gray')
+axes[1].set_title("Normalized")
+plt.show()
+_, thresh = cv2.threshold(normalized, 80, 255, cv2.THRESH_BINARY)
 contours, _ = cv2.findContours(thresh, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
 min_area = 100
 fossils = [c for c in contours if cv2.contourArea(c) > min_area]
