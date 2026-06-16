@@ -17,21 +17,45 @@ for i, contour in enumerate(fossils):
         cx = int(M["m10"] / M["m00"])
         cy = int(M["m01"] / M["m00"])
         cv2.circle(result, (cx, cy), 20, (0, 255, 0), 2)
-        cv2.putText(result, str(i+1), (cx-10, cy+10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 0, 0), 2)
-        # Crop each fossil
+        cv2.putText(result, str(i+1), (cx - 10, cy + 10), cv2.FONT_HERSHEY_SIMPLEX, 0.8, (0, 255, 0), 2)
+        print(f"Fossil {i+1}: x={cx}, y={cy}")
+
+        #mask
+        mask = np.zeros(image.shape[:2], dtype=np.uint8)
+        
+        #draw contours
+        cv2.drawContours(mask, [contour], -1, 255, thickness=cv2.FILLED)
+
+
+
+        masked_fossil = cv2.bitwise_and(image, image, mask=mask)
+
+        # Crop
+        mask = np.zeros(image.shape[:2], dtype=np.uint8)
+        cv2.drawContours(mask, [contour], -1, 255, thickness=cv2.FILLED)
+
+        mask = np.zeros(image.shape[:2], dtype=np.uint8)
+        cv2.drawContours(mask, [contour], -1, 255, thickness=cv2.FILLED)
+
+    
         x, y, w, h = cv2.boundingRect(contour)
-        padding = 10
+        padding = 5
         x1 = max(x - padding, 0)
         y1 = max(y - padding, 0)
         x2 = min(x + w + padding, image.shape[1])
         y2 = min(y + h + padding, image.shape[0])
-        
-        crop = image[y1:y2, x1:x2]
-        cv2.imwrite(f"fossil_{i+1}.jpg", crop)
-        
-        crop = image[y1:y2, x1:x2]
-        cv2.imwrite(f"fossil_{i+1}.jpg", crop)
-        print(f"Fossil {i+1}: x={cx}, y={cy}")
+
+        cropped_image = image[y1:y2, x1:x2]
+        cropped_mask = mask[y1:y2, x1:x2]
+
+        #background
+        masked_black = cv2.bitwise_and(cropped_image, cropped_image, mask=cropped_mask)
+        cv2.imwrite(f"fossil_{i+1}_black.jpg", masked_black)
+
+        #no background
+        bgra = cv2.cvtColor(cropped_image, cv2.COLOR_BGR2BGRA)
+        bgra[:, :, 3] = cropped_mask
+        cv2.imwrite(f"fossil_{i+1}_transparent.png", bgra)
 
 cv2.imwrite("output.jpg", result)
 print("Saved output.jpg")
